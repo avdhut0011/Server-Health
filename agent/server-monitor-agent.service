@@ -1,0 +1,16 @@
+[Unit]
+Description=Server Health Monitoring Telemetry Agent
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/server-monitor-agent
+Environment=MONITOR_SERVER_URL=http://192.168.56.1:8000
+Environment=HEARTBEAT_INTERVAL=10
+ExecStart=/usr/bin/python3 /opt/server-monitor-agent/agent.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

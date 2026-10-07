@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-[#0b0f17] text-slate-100 antialiased selection:bg-cyan-500 selection:text-black;
+  }
+}
+
+/* Custom Scrollbar for NOC interface */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f17;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+.noc-glow-healthy {
+  box-shadow: 0 0 15px -3px rgba(16, 185, 129, 0.2);
+}
+
+.noc-glow-critical {
+  box-shadow: 0 0 15px -3px rgba(239, 68, 68, 0.3);
+}
+
+.noc-glow-warning {
+  box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.25);
+}

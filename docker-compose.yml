@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # 1. Custom Application PostgreSQL Database (Isolated from Zabbix DB)
+  postgres-app:
+    image: postgres:16-alpine
+    container_name: shm-postgres-app
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: server_health_db
+      POSTGRES_USER: shm_user
+      POSTGRES_PASSWORD: shm_password
+    volumes:
+      - app-db-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - shm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shm_user -d server_health_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Custom Application Backend (FastAPI + Async Worker + WebSockets)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: shm-backend
+    restart: unless-stopped
+    depends_on:
+      postgres-app:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+asyncpg://shm_user:shm_password@postgres-app:5432/server_health_db
+      SYNC_DATABASE_URL: postgresql://shm_user:shm_password@postgres-app:5432/server_health_db
+      ZABBIX_URL: http://zabbix-web:8080/api_jsonrpc.php
+      ZABBIX_USERNAME: Admin
+      ZABBIX_PASSWORD: zabbix
+      SECRET_KEY: enterprise_production_secret_key_change_me
+      SMTP_HOST: mailhog
+      SMTP_PORT: 1025
+      SMTP_SENDER: alerts@serverhealth.local
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/logs:/app/logs
+    networks:
+      - shm-network
+
+  # 3. Custom Application Frontend (React + TypeScript + Vite)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: shm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - shm-network
+
+  # 4. Optional Local Development Mail Server for SMTP testing (Mailhog)
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: shm-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025" # SMTP port
+      - "8025:8025" # Web UI to inspect test emails
+    networks:
+      - shm-network
+
+volumes:
+  app-db-data:
+
+networks:
+  shm-network:
+    driver: bridge

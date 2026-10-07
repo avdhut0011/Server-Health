@@ -1,0 +1,20 @@
+# Server Monitor Agent Configuration
+
+server:
+  url: "http://127.0.0.1:8000"
+
+agent:
+  id: "AGT-001"
+  heartbeat_interval: 10
+
+monitoring:
+  interval: 10
+  collect_disk: true
+  collect_network: true
+  collect_processes: true
+
+zabbix:
+  url: "http://localhost:8080/api_jsonrpc.php"
+
+logging:
+  level: INFO
